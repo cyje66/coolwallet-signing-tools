@@ -3,6 +3,7 @@ package com.coolbitx.wallet.signing.scriptlib;
 import com.coolbitx.wallet.signing.utils.HexUtil;
 import com.coolbitx.wallet.signing.utils.ScriptArgumentComposer;
 import com.coolbitx.wallet.signing.utils.ScriptAssembler;
+import static com.coolbitx.wallet.signing.utils.ScriptAssembler.TYPE_RLP;
 import com.coolbitx.wallet.signing.utils.ScriptData;
 
 public class AvaxCScript {
@@ -11,6 +12,7 @@ public class AvaxCScript {
         System.out.println("Avax: \n" + getAvaxCScript() + "\n");
         System.out.println("Avax ERC20: \n" + getERC20Script() + "\n");
         System.out.println("Avax Smart Contract: \n" + getAvaxContractBlindScript() + "\n");
+        System.out.println("Avax Smart Contract Segment: \n" + getAvaxContractBlindSegmentScript() + "\n");
         System.out.println("Avax Message: \n" + getAvaxMessageBlindScript() + "\n");
         System.out.println("Avax TypedData: \n" + getAvaxTypedDataBlindScript() + "\n");
     }
@@ -49,7 +51,7 @@ public class AvaxCScript {
                 // r,s
                 .copyString("8080")
                 // .rlpList(1)
-                .arrayEnd(1)
+                .arrayEnd(TYPE_RLP)
                 .showMessage("AVAX")
                 .copyString(HexUtil.toHexString("0x"), ScriptData.Buffer.CACHE2)
                 .baseConvert(argTo, ScriptData.Buffer.CACHE2, 0, ScriptAssembler.hexadecimalCharset,
@@ -100,7 +102,7 @@ public class AvaxCScript {
                 // r,s
                 .copyString("8080")
                 // .rlpList(2)
-                .arrayEnd(1)
+                .arrayEnd(TYPE_RLP)
                 .showMessage("AVAX")
                 .ifSigned(argTokenInfo, argSign, "",
                         new ScriptAssembler().copyString(HexUtil.toHexString("@"), ScriptData.Buffer.CACHE2).getScript()
@@ -113,7 +115,7 @@ public class AvaxCScript {
                 .baseConvert(argTo, ScriptData.Buffer.CACHE2, 0, ScriptAssembler.hexadecimalCharset, ScriptAssembler.zeroInherit)
                 .showAddress(ScriptData.getDataBufferAll(ScriptData.Buffer.CACHE2))
                 .setBufferInt(argDecimal, 0, 20)
-                .showAmount(argValue, 1000)
+                .showAmount(argValue, ScriptData.bufInt)
                 .showPressButton()
                 // version=00 ScriptAssembler.hash=06=ScriptAssembler.Keccak256 sign=01=ECDSA
                 .setHeader(ScriptAssembler.HashType.Keccak256, ScriptAssembler.SignType.ECDSA)
@@ -156,11 +158,49 @@ public class AvaxCScript {
                 // r, s
                 .copyString("8080")
                 // .rlpList(2)
-                .arrayEnd(1)
+                .arrayEnd(TYPE_RLP)
                 // txDetail
                 .showMessage("AVAX").showWrap("SMART", "").showPressButton()
                 // version=00 ScriptAssembler.hash=06=ScriptAssembler.Keccak256
                 // sign=01=ECDSA
+                .setHeader(ScriptAssembler.HashType.Keccak256, ScriptAssembler.SignType.ECDSA).getScript();
+        return script;
+    }
+
+    public static String getAvaxContractBlindSegmentScript() {
+        ScriptArgumentComposer sac = new ScriptArgumentComposer();
+        ScriptData argTo = sac.getArgument(20);
+        ScriptData argValue = sac.getArgumentRightJustified(10);
+        ScriptData argGasPrice = sac.getArgumentRightJustified(10);
+        ScriptData argGasLimit = sac.getArgumentRightJustified(10);
+        ScriptData argNonce = sac.getArgumentRightJustified(8);
+        ScriptData argData = sac.getArgument(4);
+
+        String script = new ScriptAssembler()
+                // set coinType to 3C
+                .setCoinType(0x3C).arrayPointer()
+                // nonce
+                .rlpString(argNonce)
+                // gasPrice
+                .rlpString(argGasPrice)
+                // gasLimit
+                .rlpString(argGasLimit)
+                // toAddress
+                .copyString("94").copyArgument(argTo)
+                // value
+                .rlpString(argValue)
+                // data
+                .rlpDataPlaceholder(argData)
+                // chainId v
+                .copyString("A86A", ScriptData.Buffer.CACHE1)
+                .rlpString(ScriptData.getDataBufferAll(ScriptData.Buffer.CACHE1))
+                .copyString("8080")
+                .arrayEnd(TYPE_RLP)
+                // txDetail
+                .showMessage("Avax")
+                .showWrap("SMART", "")
+                .showPressButton()
+                // version=05 ScriptAssembler.hash=06=ScriptAssembler.Keccak256 sign=01=ECDSA
                 .setHeader(ScriptAssembler.HashType.Keccak256, ScriptAssembler.SignType.ECDSA).getScript();
         return script;
     }
@@ -193,7 +233,7 @@ public class AvaxCScript {
                 .setCoinType(0x3C)
                 .copyString("1901")
                 .copyArgument(argDomainSeparator)
-                .hash(argMessage, ScriptData.Buffer.TRANSACTION, ScriptAssembler.Keccak256)
+                .hash(argMessage, ScriptData.Buffer.TRANSACTION, ScriptAssembler.HashType.Keccak256)
                 // txDetail
                 .showMessage("AVAX")
                 .showWrap("EIP712", "")

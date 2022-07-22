@@ -11,6 +11,7 @@ import com.coolbitx.wallet.signing.utils.ScriptAssembler;
 import com.coolbitx.wallet.signing.utils.ScriptData;
 import com.coolbitx.wallet.signing.utils.ScriptAssembler.HashType;
 import com.coolbitx.wallet.signing.utils.ScriptAssembler.SignType;
+import static com.coolbitx.wallet.signing.utils.ScriptAssembler.TYPE_RLP;
 import com.coolbitx.wallet.signing.utils.ScriptData.Buffer;
 import com.google.common.base.Strings;
 
@@ -140,7 +141,7 @@ public class BscScript {
                         ScriptAssembler.zeroInherit)
                 .showAddress(ScriptData.getDataBufferAll(Buffer.CACHE2))
                 .setBufferInt(argDecimal, 0, 20)
-                .showAmount(argValue, 1000)
+                .showAmount(argValue, ScriptData.bufInt)
                 .showPressButton()
                 // version=00 ScriptAssembler.hash=06=ScriptAssembler.Keccak256 sign=01=ECDSA
                 .setHeader(HashType.Keccak256, SignType.ECDSA)
@@ -218,7 +219,7 @@ public class BscScript {
                 .copyString("38", Buffer.CACHE1)
                 .rlpString(ScriptData.getDataBufferAll(Buffer.CACHE1))
                 .copyString("8080")
-                .arrayEnd(1)
+                .arrayEnd(TYPE_RLP)
                 .showMessage("BSC")
                 .showWrap("SMART", "")
                 .showPressButton()
@@ -260,7 +261,7 @@ public class BscScript {
                 // set coinType to 3C
                 .copyString("1901")
                 .copyArgument(argDomainSeparator)
-                .hash(argMessage, Buffer.TRANSACTION, ScriptAssembler.Keccak256)
+                .hash(argMessage, Buffer.TRANSACTION, HashType.Keccak256)
                 .showMessage("BSC")
                 .showWrap("TYPED", "DATA")
                 .showPressButton()
