@@ -16,9 +16,11 @@ import com.coolbitx.wallet.signing.utils.ScriptData.Buffer;
 public class ScriptArgumentComposer {
 
     private int offset;
+    private int rlpCount;
 
     public ScriptArgumentComposer() {
         this.offset = 0;
+        this.rlpCount = 0;
     }
 
     /**
@@ -65,7 +67,7 @@ public class ScriptArgumentComposer {
      * in BufferInt. Will add length to the offset of argument buffer.
      *
      * @param length The max length of argument.
-     * @return Buffer data with zero padding to left-side of argument.
+     * @return Buffer data with zero padding to right-side of argument.
      */
     public ScriptData getArgumentVariableLength(int length) {
         ScriptData db = ScriptData.getBuffer(Buffer.ARGUMENT, this.offset, ScriptData.bufInt);

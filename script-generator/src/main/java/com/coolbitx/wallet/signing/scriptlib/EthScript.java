@@ -10,7 +10,9 @@ import com.coolbitx.wallet.signing.utils.ScriptAssembler;
 import com.coolbitx.wallet.signing.utils.ScriptData;
 import com.coolbitx.wallet.signing.utils.ScriptAssembler.HashType;
 import com.coolbitx.wallet.signing.utils.ScriptAssembler.SignType;
+import static com.coolbitx.wallet.signing.utils.ScriptAssembler.TYPE_RLP;
 import com.coolbitx.wallet.signing.utils.ScriptData.Buffer;
+import com.google.common.base.Strings;
 
 public class EthScript {
 
@@ -72,7 +74,7 @@ public class EthScript {
                 .copyString("80")
                 // accessList
                 .copyString("C0")
-                .arrayEnd(1)
+                .arrayEnd(TYPE_RLP)
                 // txDetail
                 .showMessage("ETH")
                 .copyString(HexUtil.toHexString("0x"), Buffer.CACHE2)
@@ -132,7 +134,7 @@ public class EthScript {
                 .copyString("80B844a9059cbb000000000000000000000000").copyArgument(argTo)
                 .copyString("0000000000000000000000000000000000000000").copyArgument(argValue)
                 // accessList
-                .copyString("C0").arrayEnd(1).showMessage("ETH")
+                .copyString("C0").arrayEnd(TYPE_RLP).showMessage("ETH")
                 .ifSigned(argTokenInfo, argSign, "",
                         new ScriptAssembler().copyString(HexUtil.toHexString("@"), Buffer.CACHE2)
                                 .getScript())
@@ -146,7 +148,7 @@ public class EthScript {
                         ScriptAssembler.zeroInherit)
                 .showAddress(ScriptData.getDataBufferAll(Buffer.CACHE2))
                 .setBufferInt(argDecimal, 0, 20)
-                .showAmount(argValue, 1000)
+                .showAmount(argValue, ScriptData.bufInt)
                 .showPressButton()
                 // version=04 ScriptAssembler.hash=06=ScriptAssembler.Keccak256 sign=01=ECDSA
                 .setHeader(HashType.Keccak256, SignType.ECDSA).getScript();
@@ -156,6 +158,7 @@ public class EthScript {
     public static String ETHEIP1559ERC20ScriptSignature
             = "00304502207A63FB17CEA7E123C1BF12CBE3687614FCD677DE13171CC0B275E9659421762A022100ED2A5EC6AB2736C1D9087033CB48181784859A10C8A9674ADEFE34A84D520646";
 
+    private static final String emptyAddress = "0000000000000000000000000000000000000000";
     public static String getETHEIP1559SmartScript() {
         ScriptArgumentComposer sac = new ScriptArgumentComposer();
         ScriptData argTo = sac.getArgument(20);
@@ -175,17 +178,24 @@ public class EthScript {
                         .arrayPointer()
                         // chainId
                         .copyString("01")
+                        //.copyString("03") // Ropsten chainId
                         .rlpString(argNonce)
                         .rlpString(argGasTipCap)
                         .rlpString(argGasFeeCap)
                         .rlpString(argGasLimit)
-                        .copyString("94")
-                        .copyArgument(argTo)
+                        .ifEqual(argTo, emptyAddress, 
+                                new ScriptAssembler()
+                                        .copyString("80")
+                                        .getScript(), 
+                                new ScriptAssembler()
+                                        .copyString("94")
+                                        .copyArgument(argTo)
+                                        .getScript())
                         .rlpString(argValue)
                         .rlpString(argData)
                         // accessList
                         .copyString("C0")
-                        .arrayEnd(1)
+                        .arrayEnd(TYPE_RLP)
                         // txDetail
                         .showMessage("ETH")
                         .showWrap("SMART", "")
@@ -198,7 +208,9 @@ public class EthScript {
     }
 
     public static String ETHEIP1559SmartScriptSignature
-            = "003045022100D28537F886B9330A61BB88B7ED436A4E66C50A03EDB883FCB78279FE2C704BD402205C2E473AA2302133B659D7BD95FD8D7D80B7BF5C1B65FCC4519E7B189600BA89";
+            = Strings.padStart(
+                "30450221008E37E8BADC645B749B0608A8DB0A9577798582F96BAEC5EC53694485A9DFFDB7022011A2A6D060577CC185C94AD17AF441AB0F5BCAE301A9F0E7611B0FF8614237C1",
+                144, '0');
 
     public static String getETHEIP1559SmartSegmentScript() {
         ScriptArgumentComposer sac = new ScriptArgumentComposer();
@@ -218,16 +230,23 @@ public class EthScript {
                 .arrayPointer()
                 // chainId
                 .copyString("01")
+                //.copyString("03") // Ropsten chainId
                 .rlpString(argNonce)
                 .rlpString(argGasTipCap)
                 .rlpString(argGasFeeCap)
                 .rlpString(argGasLimit)
-                .copyString("94")
-                .copyArgument(argTo)
+                .ifEqual(argTo, emptyAddress, 
+                        new ScriptAssembler()
+                                .copyString("80")
+                                .getScript(), 
+                        new ScriptAssembler()
+                                .copyString("94")
+                                .copyArgument(argTo)
+                                .getScript())
                 .rlpString(argValue)
                 .rlpDataPlaceholder(argData)
                 // accessList
-                .copyString("C0").arrayEnd(1).showMessage("ETH").showWrap("SMART", "")
+                .copyString("C0").arrayEnd(TYPE_RLP).showMessage("ETH").showWrap("SMART", "")
                 .showPressButton()
                 // version=05 ScriptAssembler.hash=06=ScriptAssembler.Keccak256 sign=01=ECDSA
                 .setHeader(HashType.Keccak256, SignType.ECDSA).getScript();
@@ -235,7 +254,9 @@ public class EthScript {
     }
 
     public static String ETHEIP1559SmartSegmentScriptSignature
-            = "003045022100F994CBD35DA01724AE1189B299F80FB5DD6A304EB0C27E5DBA7B9AD6588C92E70220170BBE5ADFF78C30FDA82784ED4C647D6D855EBACC5F13D8C171C5E529E1AF39";
+            = Strings.padStart(
+                "304402204FB15EF6265448A62E72CDB21FA585F97D05DE852AFC08CC792FCE1C3CAA472802204DD8B51801089F1D510222664D6D7A9D291671FAC8480458EA5D19E5B354B976",
+                144, '0');
 
     /*
     E7
@@ -350,7 +371,7 @@ public class EthScript {
                         ScriptAssembler.zeroInherit)
                 .showAddress(ScriptData.getDataBufferAll(Buffer.CACHE2))
                 .setBufferInt(argDecimal, 0, 20)
-                .showAmount(argValue, 1000)
+                .showAmount(argValue, ScriptData.bufInt)
                 .showPressButton()
                 // version=00 ScriptAssembler.hash=06=ScriptAssembler.Keccak256 sign=01=ECDSA
                 .setHeader(HashType.Keccak256, SignType.ECDSA).getScript();
@@ -382,7 +403,14 @@ public class EthScript {
                         // gasLimit
                         .rlpString(argGasLimit)
                         // toAddress
-                        .copyString("94").copyArgument(argTo)
+                        .ifEqual(argTo, emptyAddress, 
+                                new ScriptAssembler()
+                                        .copyString("80")
+                                        .getScript(), 
+                                new ScriptAssembler()
+                                        .copyString("94")
+                                        .copyArgument(argTo)
+                                        .getScript())
                         // value
                         .rlpString(argValue)
                         // data
@@ -390,6 +418,7 @@ public class EthScript {
                         // chainId v
                         // .rlpString(argChainId)
                         .copyString("01", Buffer.CACHE1)
+                        //.copyString("03", Buffer.CACHE1)  // Ropsten chainId
                         .rlpString(ScriptData.getDataBufferAll(Buffer.CACHE1))
                         // r, s
                         .copyString("8080").rlpList(2)
@@ -402,7 +431,9 @@ public class EthScript {
     }
 
     public static String EtherContractBlindScriptSignature
-            = "3046022100EC9BC856CEC733451CF4063C60DE27F9E920F7423122CCA19DC47B82E694799C0221008F754911B9C966EF430ED8919A58333D9800E8EBF4FB98B06C797E991DA03697";
+            = Strings.padStart(
+                "304602210089EC4D1DDD9EEDA00C2A10DDB1513B7CF9EE13C36067688C52CA54A681A14A650221008D15D8509DC140D3DBB81D31C01CAD1917812B5C18A613186F904BC84857BA1C",
+                144, '0');
 
     public static String getEtherContractBlindSegmentScript() {
         ScriptArgumentComposer sac = new ScriptArgumentComposer();
@@ -423,16 +454,24 @@ public class EthScript {
                 // gasLimit
                 .rlpString(argGasLimit)
                 // toAddress
-                .copyString("94").copyArgument(argTo)
+                .ifEqual(argTo, emptyAddress, 
+                        new ScriptAssembler()
+                                .copyString("80")
+                                .getScript(), 
+                        new ScriptAssembler()
+                                .copyString("94")
+                                .copyArgument(argTo)
+                                .getScript())
                 // value
                 .rlpString(argValue)
                 // data
                 .rlpDataPlaceholder(argData)
                 // chainId v
                 .copyString("01", Buffer.CACHE1)
+                //.copyString("03", Buffer.CACHE1)  // Ropsten chainId
                 .rlpString(ScriptData.getDataBufferAll(Buffer.CACHE1))
                 .copyString("8080")
-                .arrayEnd(1)
+                .arrayEnd(TYPE_RLP)
                 // txDetail
                 .showMessage("ETH")
                 .showWrap("SMART", "")
@@ -443,7 +482,9 @@ public class EthScript {
     }
 
     public static String EtherContractBlindSegmentScriptSignature
-            = "003045022060FC29B9ACA3BDFA237ED377E410A9A9BB12FB88416C06298857AE17D688992D022100F87D2C80BBECDC7192FF64D13A28F7763D6E1610FC1B1254B3D6446822CBA414";
+            = Strings.padStart(
+                "30450220418A010D1F92DAD570FE7D74424BB28927A14474AB68A008440EB4B49F2B77E30221008C3E598B4BE9D33F54C8C04B40AF5136733FE497791A2E43D107EE53E4D87DD6",
+                144, '0');
 
     public static String getEtherMessageBlindScript() {
         ScriptArgumentComposer sac = new ScriptArgumentComposer();
@@ -476,7 +517,7 @@ public class EthScript {
                 .setCoinType(0x3C)
                 .copyString("1901")
                 .copyArgument(argDomainSeparator)
-                .hash(argMessage, Buffer.TRANSACTION, ScriptAssembler.Keccak256)
+                .hash(argMessage, Buffer.TRANSACTION, HashType.Keccak256)
                 // txDetail
                 .showMessage("ETH")
                 .showWrap("EIP712", "")

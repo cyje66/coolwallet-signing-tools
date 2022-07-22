@@ -19,12 +19,15 @@ public class AllScript {
         XrpScript.listAll();
         AdaScript.listAll();
         EtcScript.listAll();
+        CosmosScript.listAll();
         CronosScript.listAll();
         CroScript.listAll();
         XtzScript.listAll();
-        LunaScript.listAll();
         MaticScript.listAll();
+        SolScript.listAll();
         TerraScript.listAll();
+        ThetaScript.listAll();
+        NearScript.listAll();
+        IotxScript.listAll();
     }
-
 }
